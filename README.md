@@ -26,7 +26,7 @@
 
 ## 🛠️ 安装与运行
 
-### 1. 克隆项目
+#  1. 克隆项目
 ```bash
 git clone [https://github.com/kisslovemore/DeepCleanerPro.git](https://github.com/kisslovemore/DeepCleanerPro.git)
 cd DeepCleanerPro
@@ -41,3 +41,35 @@ Bash
 
 python main.py
 
+
+
+---
+
+<img width="1851" height="1185" alt="b7a5b533527e533013792a9a50db9d45" src="https://github.com/user-attachments/assets/ec55b129-5483-4398-821e-58cdcb1a30c4" />
+<img width="1899" height="1224" alt="49e084308d1ecd81f7ca08dcedbab80d" src="https://github.com/user-attachments/assets/a74a7124-8937-48cd-accb-a7683d02dc0d" />
+
+##  📖 使用步骤
+选择目录：点击“选择目录”按钮，指定需要扫描的文件夹。
+
+设置配置：根据需求选择扫描模式（建议默认“按内容”）和保留策略。
+
+开始分析：点击绿色按钮，观察进度条实时反馈。
+
+人工核对：在结果列表中点击文件，通过右侧预览面板确认内容。
+
+一键清理：确认无误后点击“移至回收站”，释放空间。
+
+##  🏗️ 技术实现细节
+架构设计：项目采用了清晰的 生产者-消费者 线程模型。
+
+ProScanThread：负责 IO 扫描与指纹计算，利用 ThreadPoolExecutor 并发加速哈希运算。
+
+DeleteThread：负责异步调用系统 API 进行安全删除，避免阻塞主界面。
+
+GUI 交互：基于 PyQt6 QSS 打造，包含物理感按钮点击动画（Hover/Pressed/Disabled）。
+
+##  ⚠️ 免责声明
+虽然本项目提供了回收站保护机制，但在处理极其重要的数据前，仍建议您进行手动备份。作者对因误操作导致的数据丢失不承担法律责任。
+
+##  🤝 贡献与支持
+欢迎提交 Issue 或 Pull Request 来完善此项目！如果你觉得好用，请给个 Star 🌟。
