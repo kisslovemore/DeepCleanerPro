@@ -51,6 +51,7 @@ python main.py
 ##  界面截图
 <img width="1851" height="1185" alt="b7a5b533527e533013792a9a50db9d45" src="https://github.com/user-attachments/assets/ec55b129-5483-4398-821e-58cdcb1a30c4" />
 <img width="1899" height="1224" alt="49e084308d1ecd81f7ca08dcedbab80d" src="https://github.com/user-attachments/assets/a74a7124-8937-48cd-accb-a7683d02dc0d" />
+<img width="1851" height="1185" alt="f3fa85db8d8abfd06524827a7efca264" src="https://github.com/user-attachments/assets/1862adcf-192a-4834-b688-3b53db67377e" />
 
 ##  📖 使用步骤
 选择目录：点击“选择目录”按钮，指定需要扫描的文件夹。
