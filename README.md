@@ -1,4 +1,4 @@
-# AI File Cleaner Pro (v5.0) 🚀
+# AI File Cleaner Pro (v1.0) 🚀
 
 ![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)
 ![PyQt6](https://img.shields.io/badge/GUI-PyQt6-green.svg)
