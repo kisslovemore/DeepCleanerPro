@@ -25,9 +25,9 @@
 ---
 
 ## 🛠️ 安装与运行
-
-#  1. 克隆项目
-```bash
+```
+# 1. 克隆项目
+bash
 git clone [https://github.com/kisslovemore/DeepCleanerPro.git](https://github.com/kisslovemore/DeepCleanerPro.git)
 cd DeepCleanerPro
 
@@ -40,11 +40,15 @@ pip install PyQt6 Pillow imagehash send2trash opencv-python
 Bash
 
 python main.py
-
+```
 
 
 ---
 
+
+
+
+##  界面截图
 <img width="1851" height="1185" alt="b7a5b533527e533013792a9a50db9d45" src="https://github.com/user-attachments/assets/ec55b129-5483-4398-821e-58cdcb1a30c4" />
 <img width="1899" height="1224" alt="49e084308d1ecd81f7ca08dcedbab80d" src="https://github.com/user-attachments/assets/a74a7124-8937-48cd-accb-a7683d02dc0d" />
 
