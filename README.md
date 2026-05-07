@@ -31,14 +31,13 @@
 git clone [https://github.com/kisslovemore/DeepCleanerPro.git](https://github.com/kisslovemore/DeepCleanerPro.git)
 cd DeepCleanerPro
 
-### 2. 安装依赖
+# 2. 安装依赖
 Bash
 
 pip install PyQt6 Pillow imagehash send2trash opencv-python
 
-### 3. 运行程序
+# 3. 运行程序
 Bash
 
 python main.py
 
----
