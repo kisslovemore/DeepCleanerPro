@@ -38,6 +38,10 @@ pip install PyQt6 Pillow imagehash send2trash opencv-python
 Bash
 
 python main.py
+
+
+
+
 📖 使用指南
 选择目录：点击“选择目录”按钮，指定需要扫描的文件夹。
 
