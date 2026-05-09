@@ -1,4 +1,4 @@
-# AI 文件整理专家 Pro (v1.0) 🚀
+# AI 文件整理专家 Pro (v1.1) 🚀
 
 ![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)
 ![PyQt6](https://img.shields.io/badge/GUI-PyQt6-green.svg)
@@ -9,6 +9,17 @@
 
 
 ---
+
+
+🛠️ 本次修复细节：
+
+1、Bug 解决：在 on_trash_finished 函数中，删除了原本的 self.start_scan() 调用。
+
+2、局部 UI 刷新：新增了一个倒序循环逻辑。当文件被移至回收站后，程序会直接从界面表格中移除对应的行。这比重新扫描整个硬盘要快上数万倍，且用户能即时看到“文件消失了”的效果。
+
+3、视频检测增强：增加了 frame_count <= 0 的判断，防止因损坏的视频文件导致程序在计算指纹时意外闪退。
+
+4、平滑预览：图片预览加入了 SmoothTransformation（平滑缩放），在 NAS 远程桌面或低分辨率环境下，缩略图看起来会更清晰。
 
 ## ✨ 核心功能
 
