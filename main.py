@@ -16,7 +16,7 @@ from PyQt6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout,
 from PyQt6.QtCore import QThread, pyqtSignal, Qt
 from PyQt6.QtGui import QPixmap
 
-# --- 1. 后台删除线程：解决界面假死 ---
+# --- 1. 后台删除线程 ---
 class DeleteThread(QThread):
     progress_signal = pyqtSignal(int)
     status_signal = pyqtSignal(str)
@@ -37,21 +37,21 @@ class DeleteThread(QThread):
             except Exception as e:
                 print(f"删除失败: {path}, {e}")
             
-            # 实时反馈进度
             progress = int((i + 1) / total * 100)
             self.progress_signal.emit(progress)
-            self.status_signal.emit(f"正在移至回收站: {i+1}/{total}")
+            self.status_signal.emit(f"正在清理: {i+1}/{total}")
         
         self.finished_signal.emit(success_count)
 
-# --- 2. 后台扫描线程：支持多种去重模式 ---
+# --- 2. 后台扫描线程 ---
 def get_video_fingerprint(path):
     try:
         cap = cv2.VideoCapture(str(path))
-        fps = cap.get(cv2.CAP_PROP_FRAME_COUNT)
+        frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        if frame_count <= 0: return None
         hashes = []
         for i in range(1, 4):
-            cap.set(cv2.CAP_PROP_POS_FRAMES, int(fps * i / 4))
+            cap.set(cv2.CAP_PROP_POS_FRAMES, int(frame_count * i / 4))
             ret, frame = cap.read()
             if ret:
                 img = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
@@ -73,7 +73,7 @@ class ProScanThread(QThread):
         self.use_phash = use_phash
 
     def run(self):
-        self.status_signal.emit("正在构建索引...")
+        self.status_signal.emit("正在构建文件索引...")
         all_files = []
         for root, _, files in os.walk(self.root_path):
             for f in files: all_files.append(Path(root) / f)
@@ -91,7 +91,7 @@ class ProScanThread(QThread):
                 group_map[path.name.lower()].append({
                     "path": str(path), "size": stat.st_size, "time": stat.st_mtime, "name": path.name
                 })
-                if i % 50 == 0: self.progress_signal.emit(int(i/total*100))
+                if i % 100 == 0: self.progress_signal.emit(int(i/total*100))
         else:
             img_exts = {'.jpg', '.png', '.jpeg', '.bmp', '.webp'}
             vid_exts = {'.mp4', '.mkv', '.avi', '.mov'}
@@ -106,9 +106,9 @@ class ProScanThread(QThread):
                     else:
                         future_to_path[executor.submit(lambda p: hashlib.md5(open(p,'rb').read(8192)).hexdigest(), path)] = path
                     
-                    if i % 10 == 0:
+                    if i % 20 == 0:
                         self.progress_signal.emit(int(i/total*100))
-                        self.status_signal.emit(f"特征提取中: {i}/{total}")
+                        self.status_signal.emit(f"特征提取进度: {i}/{total}")
 
                 for future in future_to_path:
                     path = future_to_path[future]
@@ -131,11 +131,11 @@ class ProScanThread(QThread):
         
         self.finished_signal.emit(final_results)
 
-# --- 3. 主界面：包含增强版 QSS 动画 ---
+# --- 3. 主界面 ---
 class UltraCleanerGUI(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("AI 文件整理专家Pro版")
+        self.setWindowTitle("AI 文件整理专家 v1.1 - 智能局部刷新版")
         self.resize(1300, 850)
         self.setStyleSheet("""
             QMainWindow { background-color: #f5f6fa; }
@@ -164,7 +164,6 @@ class UltraCleanerGUI(QMainWindow):
         left_layout = QVBoxLayout()
         right_layout = QVBoxLayout()
 
-        # 头部路径
         path_row = QHBoxLayout()
         self.path_input = QLineEdit()
         btn_browse = QPushButton("选择目录")
@@ -174,7 +173,6 @@ class UltraCleanerGUI(QMainWindow):
         path_row.addWidget(btn_browse)
         left_layout.addLayout(path_row)
 
-        # 设置区
         config_row = QHBoxLayout()
         self.combo_mode = QComboBox()
         self.combo_mode.addItems(["按内容/视觉相似", "按名称(同名文件)"])
@@ -190,7 +188,6 @@ class UltraCleanerGUI(QMainWindow):
         config_row.addStretch()
         left_layout.addLayout(config_row)
 
-        # 控制区
         self.btn_scan = QPushButton("🔍 开始分析 (多线程)")
         self.btn_scan.setObjectName("primaryBtn")
         self.btn_scan.clicked.connect(self.start_scan)
@@ -199,21 +196,19 @@ class UltraCleanerGUI(QMainWindow):
         left_layout.addWidget(self.btn_scan)
         left_layout.addWidget(self.progress_bar)
 
-        # 结果表格
         self.table = QTableWidget(0, 5)
-        self.table.setHorizontalHeaderLabels(["删除选项", "指纹ID/名称", "大小(MB)", "最后修改", "文件路径"])
+        self.table.setHorizontalHeaderLabels(["删除?", "指纹/名称", "大小(MB)", "最后修改", "文件路径"])
         self.table.horizontalHeader().setSectionResizeMode(4, QHeaderView.ResizeMode.Stretch)
         self.table.itemSelectionChanged.connect(self.update_preview)
         left_layout.addWidget(self.table)
 
-        # 预览区
         self.preview_label = QLabel("预览区域")
         self.preview_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.preview_label.setFixedSize(350, 350)
         self.preview_label.setStyleSheet("border: 2px dashed #ccc; background: white; border-radius: 12px;")
         right_layout.addWidget(self.preview_label)
         
-        self.info_label = QLabel("选择文件以查看详情...")
+        self.info_label = QLabel("等待扫描...")
         self.info_label.setWordWrap(True)
         self.info_label.setStyleSheet("color: #666; font-size: 13px; padding: 10px;")
         right_layout.addWidget(self.info_label)
@@ -227,7 +222,6 @@ class UltraCleanerGUI(QMainWindow):
         main_layout.addLayout(left_layout, stretch=4)
         main_layout.addLayout(right_layout, stretch=1)
 
-        # 状态栏
         self.status_bar = QStatusBar()
         self.setStatusBar(self.status_bar)
         self.stat_label = QLabel("就绪")
@@ -237,8 +231,6 @@ class UltraCleanerGUI(QMainWindow):
         self.btn_scan.setEnabled(not locked)
         self.btn_trash.setEnabled(not locked)
         self.table.setEnabled(not locked)
-        self.combo_mode.setEnabled(not locked)
-        self.combo_strategy.setEnabled(not locked)
 
     def start_scan(self):
         path = self.path_input.text()
@@ -273,9 +265,10 @@ class UltraCleanerGUI(QMainWindow):
 
             if not item['is_duplicate']:
                 for j in range(5):
-                    if self.table.item(i, j):
-                        self.table.item(i, j).setBackground(Qt.GlobalColor.darkCyan)
-                        self.table.item(i, j).setForeground(Qt.GlobalColor.white)
+                    it = self.table.item(i, j)
+                    if it:
+                        it.setBackground(Qt.GlobalColor.darkCyan)
+                        it.setForeground(Qt.GlobalColor.white)
         
         self.stat_label.setText(f"分析完成 | 总计: {len(items)} | 建议删除: {del_count} | 建议保留: {len(items)-del_count}")
 
@@ -285,17 +278,19 @@ class UltraCleanerGUI(QMainWindow):
             if row < 0: return
             path = self.table.item(row, 4).text()
             self.info_label.setText(f"文件名: {os.path.basename(path)}\n路径: {path}")
-            if Path(path).suffix.lower() in {'.jpg', '.png', '.jpeg', '.bmp'}:
+            ext = Path(path).suffix.lower()
+            if ext in {'.jpg', '.png', '.jpeg', '.bmp', '.webp'}:
                 pixmap = QPixmap(path)
-                self.preview_label.setPixmap(pixmap.scaled(350, 350, Qt.AspectRatioMode.KeepAspectRatio))
+                self.preview_label.setPixmap(pixmap.scaled(350, 350, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
             else:
-                self.preview_label.setText("不支持预览此格式")
+                self.preview_label.setText("暂不支持预览")
         except: pass
 
     def start_trash(self):
         to_trash = []
         for i in range(self.table.rowCount()):
-            if self.table.cellWidget(i, 0).isChecked():
+            cb = self.table.cellWidget(i, 0)
+            if cb and cb.isChecked():
                 to_trash.append(self.table.item(i, 4).text())
         
         if not to_trash:
@@ -305,7 +300,7 @@ class UltraCleanerGUI(QMainWindow):
         confirm = QMessageBox.question(self, "确认删除", f"确定将选中的 {len(to_trash)} 个文件移至回收站吗？")
         if confirm == QMessageBox.StandardButton.Yes:
             self.lock_ui(True)
-            self.btn_trash.setText("正在清理...")
+            self.btn_trash.setText("正在执行清理...")
             self.del_thread = DeleteThread(to_trash)
             self.del_thread.progress_signal.connect(self.progress_bar.setValue)
             self.del_thread.status_signal.connect(self.stat_label.setText)
@@ -313,10 +308,20 @@ class UltraCleanerGUI(QMainWindow):
             self.del_thread.start()
 
     def on_trash_finished(self, count):
+        """修复 Bug：不再全盘重扫，而是局部刷新 UI"""
         self.lock_ui(False)
         self.btn_trash.setText("🗑️ 移至回收站")
         QMessageBox.information(self, "完成", f"已成功处理 {count} 个文件")
-        self.start_scan() # 自动刷新列表
+        
+        # 核心修复：从下往上移除已删除的行
+        for i in range(self.table.rowCount() - 1, -1, -1):
+            cb = self.table.cellWidget(i, 0)
+            if cb and cb.isChecked():
+                self.table.removeRow(i)
+        
+        # 更新状态栏数据
+        current_rows = self.table.rowCount()
+        self.stat_label.setText(f"清理完成 | 剩余项目: {current_rows}")
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
