@@ -11,7 +11,7 @@
 ---
 
 
-🛠️ 本次修复细节：
+🛠️ v1.1修复细节：
 
 1、Bug 解决：在 on_trash_finished 函数中，删除了原本的 self.start_scan() 调用。
 
